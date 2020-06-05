@@ -1,0 +1,44 @@
+const int tempInPin = A0;
+const in tempOutPin = A2;
+
+const int greenLedPin = 7;
+const int redLedPin = 8;
+
+const int rainPin = A1;
+
+const int windowPosPin = 5;
+const int windowBlindsPin = 3;
+
+const int lightPin = A3;
+
+const int lockPin = 12;
+
+void setup()
+{
+  pinMode(13, OUTPUT);
+  pinMode(tempInPin, INPUT);
+  pinMode(tempOutPin, INPUT);
+  
+  pinMode(greenLedPin, OUTPUT);
+  pinMode(redLedPin, OUTPUT);
+  
+  pinMode(rainPin, INPUT);
+  
+  pinMode(windowPosPin, OUTPUT);
+  pinMode(windowsBlindsPin, OUTPUT);
+  
+  pinMode(lightPin, INPUT);
+  
+  pinMode(lockPin, OUTPUT);
+  
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  int reading = analogRead(tempInPin);
+  delay(1000);
+  Serial.println(reading);
+  delay(1000);
+  
+}
