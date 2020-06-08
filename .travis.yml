@@ -1,0 +1,35 @@
+language: c
+
+
+
+compiler:
+
+  - avr-gcc
+
+before_install:
+
+  - echo "Reached before install Section - cunit packages install"
+
+  - sudo apt-get update
+  
+  - sudo apt-get upgrade -y
+
+  - sudo apt-get install gcc-avr binutils-avr avr-libc
+
+  - sudo apt-get install avrdude
+
+install:
+
+  - echo  "Reached Install Section"
+
+script:
+
+  - echo "Reached Script Section"
+  
+  - avr-gcc -Os -DF_CPU=16000000UL -mmcu=atmega328p -c -o bare_metal_code.o bare_metal_code.c
+  
+  - avr-gcc -mmcu=atmega328p bare_metal_code.o -o output
+
+  #- ./output
+
+  #- size output
