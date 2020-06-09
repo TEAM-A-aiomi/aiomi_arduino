@@ -22,6 +22,7 @@ const int redLedPin = 8;
 //the only interrupt pins on the uno are UNO pins 2 and 3 - https://arduino.stackexchange.com/questions/1784/how-many-interrupt-pins-can-an-uno-handle#:~:text=There%20are%20only%20two%20external,edges%2C%20or%20on%20low%20level.
 // followed this tutorial to set up slide switch https://www.instructables.com/id/Slide-Switch-With-Arduino-Uno-R3/
 const int rainSwitchPin = 2;
+const int nightSwitchPin = 4;
 
 const int rainPin = A1;
 
@@ -44,6 +45,9 @@ const int BRIGHT_LIGHT_LEVEL = 600;
 const int BLINDS_CLOSED = 0;
 const int BLINDS_OPEN = 180;
 
+const int ANALOG_MIN = 0;
+const int ANALOG_MAX = 255;
+
 Servo windowPosServo;
 Servo windowBlindsServo;
 
@@ -55,10 +59,24 @@ volatile bool isRaining = false;
 
 #define MS_DELAY 3000
 
+enum portID {A, B, C, D};
+
 int main (void) {
+    //DIGITAL OUTPUT SETUP
     /*Set to one the fifth bit of DDRB to one
     **Set digital pin 13 to output mode */
-    DDRB |= _BV(DDB5);
+    //DDRB |= _BV(DDB5);
+
+    // //digital INPUT  SETUPbuttonPin setup - see https://arduino.stackexchange.com/questions/75927/i-am-trying-to-read-input-from-5th-pin-of-port-b 
+    // //Set digital pin 7 to input mode
+    // DDRD |= ~_BV(DDD7);
+    // // disable internal pull up
+    // PORTD |= ~_BV(DDD7);
+
+
+
+
+
     // TOOD finish setup, see setup function below
     
     int insideReading = 0;
@@ -66,6 +84,21 @@ int main (void) {
     int lightReading = 0;
 
     while(1) {
+      //Sample code for digitalWrite
+        // /*Set to one the fifth bit of PORTB to one
+        // **Set to HIGH the pin 13 */
+        // PORTB |= _BV(PORTB5);
+
+        // /*Wait 3000 ms */
+        // _delay_ms(MS_DELAY);
+
+        // /*Set to zero the fifth bit of PORTB
+        // **Set to LOW the pin 13 */
+        // PORTB &= ~_BV(PORTB5);
+
+        // /*Wait 3000 ms */
+        // _delay_ms(MS_DELAY);
+
       insideReading = readAnalog("inside: ", tempInPin);
       outsideReading = readAnalog("outside: ", tempOutPin);
       lightReading = readAnalog("light: ", lightPin);
@@ -97,6 +130,8 @@ void setup()
   
   pinMode(rainSwitchPin, INPUT);
   
+  pinMode(nightSwitchPin, INPUT);
+  
   attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
   
   
@@ -111,11 +146,12 @@ void setup()
 void loop()
 {
  //testAllComponents();
+ bool nightMode = readDigital(nightSwitchPin);
   int insideReading = readAnalog("inside: ", tempInPin);
   int outsideReading = readAnalog("outside: ", tempOutPin);
   int lightReading = readAnalog("light: ", lightPin);
   //TODO get other readings, change setWindowPosition to use them
-  setWindowPosition(insideReading, outsideReading, lightReading);
+  setWindowPosition(insideReading, outsideReading, lightReading, nightMode);
   
 }
 */
@@ -130,6 +166,9 @@ void testAllComponents(){
   turnOnOffLed(redLedPin);
   turnOnOffLed(greenLedPin);
   turnOnOffLed(lockPin);
+
+  readDigital(nightSwitchPin);
+
   readAnalog("temp in: ", tempInPin);
   readAnalog("temp out: ", tempOutPin);
   readAnalog("light: ", lightPin);
@@ -190,13 +229,69 @@ int readAnalog(String desc, int pin){
   delay(100); 
   return reading;
 }
+
+bool readDigital(int pin){
+//  int reading = digitalRead(pin);
+//   delay(100);
+//   if(reading == HIGH){
+//     return true;
+//   }
+//   else{
+//     return false;
+//   }
+
+
+
+  
+  bool buttonState = false; //TODO implement
+  //int buttonState = PIND & _BV(PD7); //true if buttonState is 128, false if buttonState = 0 (but I only used one pin, should check one value instead)
+
+  return buttonState
+}
+
+void setDigital(enum portID port, int pin, bool value){
+  //TODO implement in bare metal c
+  switch(port){
+    case lastSetBlindsAngle:
+      if(value == true){
+        // digitalWrite(pin, HIGH);
+        PORTB |= _BV(pin);
+      }
+      else{
+        //digitalWrite(pin, LOW);
+        PORTB &= ~_BV(pin);
+      }
+      break;
+    case C:
+      if(value == true){
+        // digitalWrite(pin, HIGH);
+        PORTC |= _BV(pin);
+      }
+      else{
+        //digitalWrite(pin, LOW);
+        PORTC &= ~_BV(pin);
+      }
+      break;
+      //TODO fill in
+  }
+
+  _delay_ms(500);
+}
+
+void setAnalog(int pin, int value){
+  //TODO implement in bare metal c
+  if(value >= ANALOG_MIN && value <= ANALOG_MAX){
+    analogWrite(pin, value);
+    delay(50;)
+  }  
+}
     
-void setWindowPosition(int insideReading, int outsideReading, int lightReading){
+void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode){
     //isRaining is determined by interrupt, close the window all the way if it is raining
   if(isRaining){
     setWindowAngle(WINDOW_CLOSED);
   } 
-  else if(lightReading < NIGHT_LIGHT_LEVEL){
+  else if(nightMode && lightReading < NIGHT_LIGHT_LEVEL){
     // light level indicated night time, so set window to night time position and lock 
     setWindowAngle(WINDOW_NIGHT);
     if(WINDOW_NIGHT == WINDOW_CLOSED){
