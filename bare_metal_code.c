@@ -8,7 +8,7 @@
 //TODO change pins to port numbers
 
 //interrupts: arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
-// comparator interrupt https://forum.arduino.cc/index.php?topic=149840.0, https://www.youtube.com/watch?v=QdJrJXQaiy8, http://www.gammon.com.au/forum/?id=11916, 
+// comparator interrupt https://forum.arduino.cc/index.php?topic=149840.0, https://www.youtube.com/watch?v=QdJrJXQaiy8, http://www.gammon.com.au/forum/?id=11916,
 const int tempInPin = A2;
 const int tempOutPin = A0;
 // highest temp corresponds to 358, lowest temp corresponds to 20
@@ -59,52 +59,58 @@ volatile bool isRaining = false;
 
 #define MS_DELAY 3000
 
-enum portID {A, B, C, D};
+enum portID
+{
+  A,
+  B,
+  C,
+  D
+};
 
-int main (void) {
-    //DIGITAL OUTPUT SETUP
-    /*Set to one the fifth bit of DDRB to one
+int main(void)
+{
+  //DIGITAL OUTPUT SETUP
+  /*Set to one the fifth bit of DDRB to one
     **Set digital pin 13 to output mode */
-    //DDRB |= _BV(DDB5);
+  //DDRB |= _BV(DDB5);
 
-    // //digital INPUT  SETUPbuttonPin setup - see https://arduino.stackexchange.com/questions/75927/i-am-trying-to-read-input-from-5th-pin-of-port-b 
-    // //Set digital pin 7 to input mode
-    // DDRD |= ~_BV(DDD7);
-    // // disable internal pull up
-    // PORTD |= ~_BV(DDD7);
+  // //digital INPUT  SETUPbuttonPin setup - see https://arduino.stackexchange.com/questions/75927/i-am-trying-to-read-input-from-5th-pin-of-port-b
+  // //Set digital pin 7 to input mode
+  // DDRD |= ~_BV(DDD7);
+  // // disable internal pull up
+  // PORTD |= ~_BV(DDD7);
 
+  analogReadSetup();
 
-    analogReadSetup();
+  // TOOD finish setup, see setup function below
 
+  int insideReading = 0;
+  int outsideReading = 0;
+  int lightReading = 0;
 
-    // TOOD finish setup, see setup function below
-    
-    int insideReading = 0;
-    int outsideReading = 0;
-    int lightReading = 0;
+  while (1)
+  {
+    //Sample code for digitalWrite
+    // /*Set to one the fifth bit of PORTB to one
+    // **Set to HIGH the pin 13 */
+    // PORTB |= _BV(PORTB5);
 
-    while(1) {
-      //Sample code for digitalWrite
-        // /*Set to one the fifth bit of PORTB to one
-        // **Set to HIGH the pin 13 */
-        // PORTB |= _BV(PORTB5);
+    // /*Wait 3000 ms */
+    // _delay_ms(MS_DELAY);
 
-        // /*Wait 3000 ms */
-        // _delay_ms(MS_DELAY);
+    // /*Set to zero the fifth bit of PORTB
+    // **Set to LOW the pin 13 */
+    // PORTB &= ~_BV(PORTB5);
 
-        // /*Set to zero the fifth bit of PORTB
-        // **Set to LOW the pin 13 */
-        // PORTB &= ~_BV(PORTB5);
+    // /*Wait 3000 ms */
+    // _delay_ms(MS_DELAY);
 
-        // /*Wait 3000 ms */
-        // _delay_ms(MS_DELAY);
-
-      insideReading = readAnalog(tempInPin);
-      outsideReading = readAnalog(tempOutPin);
-      lightReading = readAnalog(lightPin);
-      //TODO get other readings, change setWindowPosition to use them
-      setWindowPosition(insideReading, outsideReading, lightReading);  
-    }
+    insideReading = readAnalog(tempInPin);
+    outsideReading = readAnalog(tempOutPin);
+    lightReading = readAnalog(lightPin);
+    //TODO get other readings, change setWindowPosition to use them
+    setWindowPosition(insideReading, outsideReading, lightReading);
+  }
 }
 
 /**
@@ -157,7 +163,8 @@ void loop()
 */
 
 //interrupt that toggles the isRaining variable
-void changeRainingStatus(){
+void changeRainingStatus()
+{
   isRaining = !isRaining;
 }
 
@@ -226,230 +233,258 @@ void turnOnOffLed(int pin){
 //   int reading = analogRead(pin);
 //   delay(100);
 //   Serial.println(desc + reading);
-//   delay(100); 
+//   delay(100);
 //   return reading;
 // }
 
-void analogReadSetup(){
-      //ADC setup 
-    //datasheet 24.9.1 
-    //REFS1, REFS0 = 0, 1 means AVcc with external capacitor at AREF pin
-    //REFS1 = 0
-    ADMUX &= ~_BV(REFS1);
-    //REFS0 = 1
-    ADMUX |= _BV(REFS0);
-  
-  
-  	//left adjust ADC reading ADMUX(ADLAR) = 1
-  	//right adjust ADMUX(ADLAR) = 0	
+void analogReadSetup()
+{
+  //ADC setup
+  //datasheet 24.9.1
+  //REFS1, REFS0 = 0, 1 means AVcc with external capacitor at AREF pin
+  //REFS1 = 0
+  ADMUX &= ~_BV(REFS1);
+  //REFS0 = 1
+  ADMUX |= _BV(REFS0);
+
+  //left adjust ADC reading ADMUX(ADLAR) = 1
+  //right adjust ADMUX(ADLAR) = 0
   ADMUX &= ~_BV(ADLAR);
-  	
 
-    //enable ADC by making ADEN bit = 1
-    ADCSRA |= _BV(ADEN);
+  //enable ADC by making ADEN bit = 1
+  ADCSRA |= _BV(ADEN);
 
-    //enable ADIE bit in ADCSRA and I-bit in SREG so we can get ADC interrupts
-    ADCSRA |= _BV(ADIE);
-    //SREG |= _BV(I);
+  //enable ADIE bit in ADCSRA and I-bit in SREG so we can get ADC interrupts
+  ADCSRA |= _BV(ADIE);
+  //SREG |= _BV(I);
 }
 
-uint16_t readAnalog(int pin){
-    uint8_t channel_num = 0;
-    switch (pin)
-    {
-    case PORTC0:
-        channel_num = 0;
-        break;
-    case PORTC1:
-        channel_num = 1;
-        break;
-    case PORTC2:
-        channel_num = 2;
-        break;
-    default:
-        channel_num = 0;
-        break;
-    }
+uint16_t readAnalog(int pin)
+{
+  uint8_t channel_num = 0;
+  switch (pin)
+  {
+  case PORTC0:
+    channel_num = 0;
+    break;
+  case PORTC1:
+    channel_num = 1;
+    break;
+  case PORTC2:
+    channel_num = 2;
+    break;
+  case PORTC3:
+    channel_num = 3;
+    break;
+  case PORTC4:
+    channel_num = 4;
+    break;
+  case PORTC5:
+    channel_num = 5;
+    break;
+  case PORTC6:
+    channel_num = 6;
+    break;
+  default:
+    channel_num = 0;
+    break;
+  }
 
-    //Select channel to read
-    ADMUX |= channel_num;
-    //write logical zero to Power Reduction ADC bit, PRADC
-    PRR |= ~_BV(PRADC);
-    //write logical one to the ADC Start Conversion bit ADSC
-    ADCSRA |= _BV(ADSC);
-      
+  //Select channel to read
+  ADMUX |= channel_num;
+  //write logical zero to Power Reduction ADC bit, PRADC
+  PRR |= ~_BV(PRADC);
+  //write logical one to the ADC Start Conversion bit ADSC
+  ADCSRA |= _BV(ADSC);
 
-    //wait for conversion to complete
-    // ADIF = 1 when complete
-    uint8_t complete_mask = 0 | _BV(ADIF);
+  //wait for conversion to complete
+  // ADIF = 1 when complete
+  uint8_t complete_mask = 0 | _BV(ADIF);
 
-    // ADCSRA & complete_mask is 0 while we are waiting, 1 in ADIF place when complete
-    while(ADCSRA & complete_mask == 0){
-        //do nothing, wait
-    }
+  // ADCSRA & complete_mask is 0 while we are waiting, 1 in ADIF place when complete
+  while (ADCSRA & complete_mask == 0)
+  {
+    //do nothing, wait
+  }
 
-    //read upper and lower bytes, must read ADCL first for 10 bit result
-    //both are 8 bits, hoping that first parts get filled with zero
-  	uint8_t adc_high = ADCH;
-  	uint8_t adc_low = ADCL;
-    
-    uint16_t reading = (adc_high << 8) | adc_low;
+  //read upper and lower bytes, must read ADCL first for 10 bit result
+  uint8_t adc_low = ADCL;
+  uint8_t adc_high = ADCH;
 
-    return reading;
+  uint16_t reading = (adc_high << 8) | adc_low;
+
+  return reading;
 }
 
-bool readDigital(int pin){
-//  int reading = digitalRead(pin);
-//   delay(100);
-//   if(reading == HIGH){
-//     return true;
-//   }
-//   else{
-//     return false;
-//   }
+bool readDigital(int pin)
+{
+  //  int reading = digitalRead(pin);
+  //   delay(100);
+  //   if(reading == HIGH){
+  //     return true;
+  //   }
+  //   else{
+  //     return false;
+  //   }
 
-
-
-  
   bool buttonState = false; //TODO implement
   //int buttonState = PIND & _BV(PD7); //true if buttonState is 128, false if buttonState = 0 (but I only used one pin, should check one value instead)
 
   return buttonState
 }
 
-void setDigital(enum portID port, int pin, bool value){
+void setDigital(enum portID port, int pin, bool value)
+{
   //TODO implement in bare metal c
-  switch(port){
-    case lastSetBlindsAngle:
-      if(value == true){
-        // digitalWrite(pin, HIGH);
-        PORTB |= _BV(pin);
-      }
-      else{
-        //digitalWrite(pin, LOW);
-        PORTB &= ~_BV(pin);
-      }
-      break;
-    case C:
-      if(value == true){
-        // digitalWrite(pin, HIGH);
-        PORTC |= _BV(pin);
-      }
-      else{
-        //digitalWrite(pin, LOW);
-        PORTC &= ~_BV(pin);
-      }
-      break;
-      //TODO fill in
+  switch (port)
+  {
+  case lastSetBlindsAngle:
+    if (value == true)
+    {
+      // digitalWrite(pin, HIGH);
+      PORTB |= _BV(pin);
+    }
+    else
+    {
+      //digitalWrite(pin, LOW);
+      PORTB &= ~_BV(pin);
+    }
+    break;
+  case C:
+    if (value == true)
+    {
+      // digitalWrite(pin, HIGH);
+      PORTC |= _BV(pin);
+    }
+    else
+    {
+      //digitalWrite(pin, LOW);
+      PORTC &= ~_BV(pin);
+    }
+    break;
+    //TODO fill in
   }
 
   _delay_ms(500);
 }
 
-void setAnalog(int pin, int value){
+void setAnalog(int pin, int value)
+{
   //TODO implement in bare metal c
-  if(value >= ANALOG_MIN && value <= ANALOG_MAX){
+  if (value >= ANALOG_MIN && value <= ANALOG_MAX)
+  {
     analogWrite(pin, value);
     delay(50;)
-  }  
+  }
 }
-    
-void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode){
-    //isRaining is determined by interrupt, close the window all the way if it is raining
-  if(isRaining){
+
+void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode)
+{
+  //isRaining is determined by interrupt, close the window all the way if it is raining
+  if (isRaining)
+  {
     setWindowAngle(WINDOW_CLOSED);
-  } 
-  else if(nightMode && lightReading < NIGHT_LIGHT_LEVEL){
-    // light level indicated night time, so set window to night time position and lock 
+  }
+  else if (nightMode && lightReading < NIGHT_LIGHT_LEVEL)
+  {
+    // light level indicated night time, so set window to night time position and lock
     setWindowAngle(WINDOW_NIGHT);
-    if(WINDOW_NIGHT == WINDOW_CLOSED){
-     lockWindow(); 
+    if (WINDOW_NIGHT == WINDOW_CLOSED)
+    {
+      lockWindow();
     }
   }
-  else if(lightReading > BRIGHT_LIGHT_LEVEL){
+  else if (lightReading > BRIGHT_LIGHT_LEVEL)
+  {
     int angle = 165; //TODO figure out math
     setBlindsAngle(angle);
-  } 
-  else if (insideReading > (outsideReading - tolerance)){
+  }
+  else if (insideReading > (outsideReading - tolerance))
+  {
     //open window
     //(358-120)/180 = 1.82
     // 358/2 = 179
     // 20/2 = 10
-    
+
     //TODO mess with this scaling
-    int angle = (insideReading - outsideReading)/2;
-      
+    int angle = (insideReading - outsideReading) / 2;
+
     // open the window
     setWindowAngle(angle);
-    
+
     //close the blinds
     //TODO adjust to make sure that it works even in blinds open and angle are different scales
     //setBlindsAngle(BLINDS_OPEN - angle);
-   
   }
-   else if (outsideReading > (insideReading - tolerance)){
+  else if (outsideReading > (insideReading - tolerance))
+  {
     //close window because it is more than tolerance hotter outside than inside
-    
-    int angle = WINDOW_CLOSED;   
-   
+
+    int angle = WINDOW_CLOSED;
+
     setWindowAngle(angle);
-     
+
     //close the blinds all the way
     //setBlindsAngle(BLINDS_CLOSED);
-    
   }
 }
 
-void setWindowAngle(int angle){
- 
-  if(angle == lastSetWindowAngle){
+void setWindowAngle(int angle)
+{
+
+  if (angle == lastSetWindowAngle)
+  {
     indicateSuccess;
   }
-  else if(angle >= WINDOW_CLOSED && angle <= WINDOW_OPEN)
+  else if (angle >= WINDOW_CLOSED && angle <= WINDOW_OPEN)
   {
     unlockWindow();
     indicateError();
     windowPosServo.write(angle);
     delay(50);
     lastSetWindowAngle = angle;
-    
-    while(lastSetWindowAngle != angle)
-    {    	
-      	delay(10);
+
+    while (lastSetWindowAngle != angle)
+    {
+      delay(10);
     }
-    
+
     indicateSuccess();
   }
-  else{
+  else
+  {
     Serial.println("Invalid Window Position");
     indicateError();
-  }        
+  }
 }
 
-void setBlindsAngle(int angle){
- 
-  if(angle >= BLINDS_CLOSED && angle <= BLINDS_OPEN && angle != lastSetBlindsAngle)
+void setBlindsAngle(int angle)
+{
+
+  if (angle >= BLINDS_CLOSED && angle <= BLINDS_OPEN && angle != lastSetBlindsAngle)
   {
     //unlockWindow();
     //indicateError();
     windowBlindsServo.write(angle);
     delay(50);
     lastSetBlindsAngle = angle;
-    
-    while(lastSetBlindsAngle != angle)
-    {    	
-      	delay(10);
+
+    while (lastSetBlindsAngle != angle)
+    {
+      delay(10);
     }
-    
+
     //indicateSuccess();
   }
-  else{
+  else
+  {
     Serial.println("Invalid Blinds Position");
     //indicateError();
-  }        
+  }
 }
 
-void indicateError(){
+void indicateError()
+{
   //TODO Oliver Update when pins change
   digitalWrite(greenLedPin, LOW);
   delay(50);
@@ -457,7 +492,8 @@ void indicateError(){
   delay(50);
 }
 
-void indicateSuccess(){
+void indicateSuccess()
+{
   //TODO Oliver Update when pins change
   digitalWrite(redLedPin, LOW);
   delay(50);
@@ -465,14 +501,14 @@ void indicateSuccess(){
   delay(50);
 }
 
-void lockWindow(){
+void lockWindow()
+{
   digitalWrite(lockPin, HIGH);
   delay(50);
 }
 
-void unlockWindow(){
-  digitalWrite(lockPin,LOW);
+void unlockWindow()
+{
+  digitalWrite(lockPin, LOW);
   delay(50);
 }
-
-
