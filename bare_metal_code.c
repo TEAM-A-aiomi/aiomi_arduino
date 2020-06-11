@@ -74,7 +74,7 @@ int main (void) {
     // PORTD |= ~_BV(DDD7);
 
 
-
+    analogReadSetup();
 
 
     // TOOD finish setup, see setup function below
@@ -99,9 +99,9 @@ int main (void) {
         // /*Wait 3000 ms */
         // _delay_ms(MS_DELAY);
 
-      insideReading = readAnalog("inside: ", tempInPin);
-      outsideReading = readAnalog("outside: ", tempOutPin);
-      lightReading = readAnalog("light: ", lightPin);
+      insideReading = readAnalog(tempInPin);
+      outsideReading = readAnalog(tempOutPin);
+      lightReading = readAnalog(lightPin);
       //TODO get other readings, change setWindowPosition to use them
       setWindowPosition(insideReading, outsideReading, lightReading);  
     }
@@ -222,12 +222,80 @@ void turnOnOffLed(int pin){
   delay(100);
 }*/
 
-int readAnalog(String desc, int pin){
-  int reading = analogRead(pin);
-  delay(100);
-  Serial.println(desc + reading);
-  delay(100); 
-  return reading;
+// int readAnalog(String desc, int pin){
+//   int reading = analogRead(pin);
+//   delay(100);
+//   Serial.println(desc + reading);
+//   delay(100); 
+//   return reading;
+// }
+
+void analogReadSetup(){
+      //ADC setup 
+    //datasheet 24.9.1 
+    //REFS1, REFS0 = 0, 1 means AVcc with external capacitor at AREF pin
+    //REFS1 = 0
+    ADMUX &= ~_BV(REFS1);
+    //REFS0 = 1
+    ADMUX |= _BV(REFS0);
+  
+  
+  	//left adjust ADC reading ADMUX(ADLAR) = 1
+  	//right adjust ADMUX(ADLAR) = 0	
+  ADMUX &= ~_BV(ADLAR);
+  	
+
+    //enable ADC by making ADEN bit = 1
+    ADCSRA |= _BV(ADEN);
+
+    //enable ADIE bit in ADCSRA and I-bit in SREG so we can get ADC interrupts
+    ADCSRA |= _BV(ADIE);
+    //SREG |= _BV(I);
+}
+
+uint16_t readAnalog(int pin){
+    uint8_t channel_num = 0;
+    switch (pin)
+    {
+    case PORTC0:
+        channel_num = 0;
+        break;
+    case PORTC1:
+        channel_num = 1;
+        break;
+    case PORTC2:
+        channel_num = 2;
+        break;
+    default:
+        channel_num = 0;
+        break;
+    }
+
+    //Select channel to read
+    ADMUX |= channel_num;
+    //write logical zero to Power Reduction ADC bit, PRADC
+    PRR |= ~_BV(PRADC);
+    //write logical one to the ADC Start Conversion bit ADSC
+    ADCSRA |= _BV(ADSC);
+      
+
+    //wait for conversion to complete
+    // ADIF = 1 when complete
+    uint8_t complete_mask = 0 | _BV(ADIF);
+
+    // ADCSRA & complete_mask is 0 while we are waiting, 1 in ADIF place when complete
+    while(ADCSRA & complete_mask == 0){
+        //do nothing, wait
+    }
+
+    //read upper and lower bytes, must read ADCL first for 10 bit result
+    //both are 8 bits, hoping that first parts get filled with zero
+  	uint8_t adc_high = ADCH;
+  	uint8_t adc_low = ADCL;
+    
+    uint16_t reading = (adc_high << 8) | adc_low;
+
+    return reading;
 }
 
 bool readDigital(int pin){
