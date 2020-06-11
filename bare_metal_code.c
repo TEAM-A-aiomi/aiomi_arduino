@@ -10,7 +10,7 @@
 //interrupts: arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
 // comparator interrupt https://forum.arduino.cc/index.php?topic=149840.0, https://www.youtube.com/watch?v=QdJrJXQaiy8, http://www.gammon.com.au/forum/?id=11916,
 
-//TODO Oliver and Krupa update to match pinouts
+//TODO Oliver, Harris, and Krupa update to match pinouts
 
 const int tempInPin =  PORTC2; //A2;
 const int tempOutPin = PORTC0; //A0;
@@ -24,7 +24,7 @@ const int redLedPin = 8;
 
 //the only interrupt pins on the uno are UNO pins 2 and 3 - https://arduino.stackexchange.com/questions/1784/how-many-interrupt-pins-can-an-uno-handle#:~:text=There%20are%20only%20two%20external,edges%2C%20or%20on%20low%20level.
 // followed this tutorial to set up slide switch https://www.instructables.com/id/Slide-Switch-With-Arduino-Uno-R3/
-const int rainSwitchPin = 2;
+const int rainSwitchPin = PD2; //2;
 const int nightSwitchPin = 4;
 
 const int rainPin = A1;
@@ -35,6 +35,9 @@ const int windowBlindsPin = 9;
 const int lightPin = A3;
 
 const int lockPin = 12;
+
+
+// END PIN DECLARATIONS
 
 const int tolerance = 10; //TODO Oliver figure out the int equilavent of 1deg Fahrenheit
 
@@ -62,13 +65,9 @@ volatile bool isRaining = false;
 
 #define MS_DELAY 3000
 
-enum portID
-{
-  A,
-  B,
-  C,
-  D
-};
+#define B 0
+#define C 1
+#define D 2
 
 int main(void)
 {
@@ -90,6 +89,14 @@ int main(void)
   int insideReading = 0;
   int outsideReading = 0;
   int lightReading = 0;
+
+
+  //configure rainSwitchPin (on port D) as digital input pin
+  DDRD &= ~_BV(DDD2);
+  PORTD &= ~_BV(DDD2);
+
+
+  attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
 
   while (1)
   {
@@ -352,12 +359,12 @@ bool readDigital(int port, int pin)
   return true;
 }
 
-void setDigital(enum portID port, int pin, bool value)
+void setDigital(int port, int pin, bool value)
 {
   //TODO implement in bare metal c
   switch (port)
   {
-  case lastSetBlindsAngle:
+  case B:
     if (value == true)
     {
       // digitalWrite(pin, HIGH);
@@ -369,16 +376,16 @@ void setDigital(enum portID port, int pin, bool value)
       PORTB &= ~_BV(pin);
     }
     break;
-  case C:
+  case D:
     if (value == true)
     {
       // digitalWrite(pin, HIGH);
-      PORTC |= _BV(pin);
+      PORTD |= _BV(pin);
     }
     else
     {
       //digitalWrite(pin, LOW);
-      PORTC &= ~_BV(pin);
+      PORTD &= ~_BV(pin);
     }
     break;
     //TODO fill in
