@@ -9,8 +9,11 @@
 
 //interrupts: arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
 // comparator interrupt https://forum.arduino.cc/index.php?topic=149840.0, https://www.youtube.com/watch?v=QdJrJXQaiy8, http://www.gammon.com.au/forum/?id=11916,
-const int tempInPin = A2;
-const int tempOutPin = A0;
+
+//TODO Oliver and Krupa update to match pinouts
+
+const int tempInPin =  PORTC2; //A2;
+const int tempOutPin = PORTC0; //A0;
 // highest temp corresponds to 358, lowest temp corresponds to 20
 
 const int greenLedPin = 7;
@@ -241,7 +244,7 @@ void analogReadSetup()
 {
   //ADC setup
   //datasheet 24.9.1
-  //REFS1, REFS0 = 0, 1 means AVcc with external capacitor at AREF pin
+  //REFS1, REFS0 = 0, 1 means AVcc with external capacitor at AREF bit
   //REFS1 = 0
   ADMUX &= ~_BV(REFS1);
   //REFS0 = 1
@@ -316,7 +319,7 @@ uint16_t readAnalog(int pin)
   return reading;
 }
 
-bool readDigital(int pin)
+bool readDigital(int port, int pin)
 {
   //  int reading = digitalRead(pin);
   //   delay(100);
@@ -326,11 +329,27 @@ bool readDigital(int pin)
   //   else{
   //     return false;
   //   }
+  int buttonState = 0;
+  switch (port)
+  {
+  case 0: //PORTB
+    buttonState = PINB & _BV(pin);
+    break;
+  case 1: //PORTB
+    buttonState = PIND & _BV(pin);
+    break;
+  default:
+    //Error in readDigital port, turn on digital pin 13 (built in LED)
+    setDigital(B, PORTB5, true);
+  }
 
-  bool buttonState = false; //TODO implement
-  //int buttonState = PIND & _BV(PD7); //true if buttonState is 128, false if buttonState = 0 (but I only used one pin, should check one value instead)
+  // masked buttonState = 0, means value of pin bit is 0
+  if (buttonState == 0)
+  {
+    return false;
+  }
 
-  return buttonState
+  return true;
 }
 
 void setDigital(enum portID port, int pin, bool value)
@@ -483,6 +502,7 @@ void setBlindsAngle(int angle)
   }
 }
 
+//TODO Oliver functions after this comment - change to use bare metal wrapper and bare metal delay
 void indicateError()
 {
   //TODO Oliver Update when pins change
