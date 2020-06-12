@@ -17,7 +17,7 @@ const int tempOutPin = PORTC0; //A0;
 // highest temp corresponds to 358, lowest temp corresponds to 20
 
 const int greenLedPin = PORTD7; //7
-const int redLedPin = PORTD8; //8
+const int redLedPin = PORTB0; //8
 
 //https://vetco.net/products/rain-sensor-for-arduino?gclid=Cj0KCQjww_f2BRC-ARIsAP3zarGmMg3D0nxuw0fdA1LHU2nxvRJa2JZ81LpUyxbbfHLFhP5XPMcqfJ0aAt3hEALw_wcB
 // rain sensor can either return an analog value or digital signal
@@ -54,8 +54,8 @@ const int BLINDS_OPEN = 180;
 const int ANALOG_MIN = 0;
 const int ANALOG_MAX = 255;
 
-Servo windowPosServo;
-Servo windowBlindsServo;
+// Servo windowPosServo;
+// Servo windowBlindsServo;
 
 int lastSetWindowAngle;
 int lastSetBlindsAngle;
@@ -78,22 +78,26 @@ int main(void)
 
   // //digital INPUT  SETUPbuttonPin setup - see https://arduino.stackexchange.com/questions/75927/i-am-trying-to-read-input-from-5th-pin-of-port-b
   // //Set digital pin 7 to input mode
-  // DDRD |= ~_BV(DDD7);
+  // DDRD &= ~_BV(DDD7);
   // // disable internal pull up
-  // PORTD |= ~_BV(DDD7);
+  // PORTD &= ~_BV(DDD7);
 
   analogReadSetup();
 
   // TOOD finish setup, see setup function below
-
+  bool nightMode = false;
   int insideReading = 0;
   int outsideReading = 0;
   int lightReading = 0;
 
 
-  //configure rainSwitchPin (on port D) as digital input pin
+  //configure rainSwitchPin (on port D, PD2) as digital input pin
   DDRD &= ~_BV(DDD2);
   PORTD &= ~_BV(DDD2);
+
+  //configure nightSwitchPin (on port D, PD4) as digital input pin
+  DDRD &= ~_BV(DDD4);
+  PORTD &= ~_BV(DDD4);
 
 
   attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
@@ -115,11 +119,12 @@ int main(void)
     // /*Wait 3000 ms */
     // _delay_ms(MS_DELAY);
 
+    nightMode = readDigital(D, PORTD4);
     insideReading = readAnalog(tempInPin);
     outsideReading = readAnalog(tempOutPin);
     lightReading = readAnalog(lightPin);
-    //TODO get other readings, change setWindowPosition to use them
-    setWindowPosition(insideReading, outsideReading, lightReading);
+
+    setWindowPosition(insideReading, outsideReading, lightReading, nightMode);
   }
 }
 
@@ -320,9 +325,12 @@ uint16_t readAnalog(int pin)
   //read upper and lower bytes, must read ADCL first for 10 bit result
   uint8_t adc_low = ADCL;
   uint8_t adc_high = ADCH;
-
+  
+  _delay_ms(100); //delay to space out readings
+  //write logical zero to the ADC Start Conversion bit ADSC
+  ADCSRA &= ~_BV(ADSC);
   uint16_t reading = (adc_high << 8) | adc_low;
-
+  _delay_ms(100); //delay to space out readings
   return reading;
 }
 
@@ -400,7 +408,7 @@ void setAnalog(int pin, int value)
   if (value >= ANALOG_MIN && value <= ANALOG_MAX)
   {
     analogWrite(pin, value);
-    delay(50;)
+    delay(50);
   }
 }
 
@@ -466,7 +474,8 @@ void setWindowAngle(int angle)
   {
     unlockWindow();
     indicateError();
-    windowPosServo.write(angle);
+    //windowPosServo.write(angle);
+    setAnalog(windowPosPin, angle);
     delay(50);
     lastSetWindowAngle = angle;
 
@@ -491,7 +500,9 @@ void setBlindsAngle(int angle)
   {
     //unlockWindow();
     //indicateError();
-    windowBlindsServo.write(angle);
+    //windowBlindsServo.write(angle);
+
+    setAnalog(windowBlindsPin, angle);
     delay(50);
     lastSetBlindsAngle = angle;
 
