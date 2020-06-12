@@ -16,25 +16,25 @@ const int tempInPin =  PORTC2; //A2;
 const int tempOutPin = PORTC0; //A0;
 // highest temp corresponds to 358, lowest temp corresponds to 20
 
-const int greenLedPin = 7;
-const int redLedPin = 8;
+const int greenLedPin = PORTD7; //7
+const int redLedPin = PORTD8; //8
 
 //https://vetco.net/products/rain-sensor-for-arduino?gclid=Cj0KCQjww_f2BRC-ARIsAP3zarGmMg3D0nxuw0fdA1LHU2nxvRJa2JZ81LpUyxbbfHLFhP5XPMcqfJ0aAt3hEALw_wcB
 // rain sensor can either return an analog value or digital signal
 
 //the only interrupt pins on the uno are UNO pins 2 and 3 - https://arduino.stackexchange.com/questions/1784/how-many-interrupt-pins-can-an-uno-handle#:~:text=There%20are%20only%20two%20external,edges%2C%20or%20on%20low%20level.
 // followed this tutorial to set up slide switch https://www.instructables.com/id/Slide-Switch-With-Arduino-Uno-R3/
-const int rainSwitchPin = PD2; //2;
-const int nightSwitchPin = 4;
+const int rainSwitchPin = PORTD2; //2;
+const int nightSwitchPin = PORTD4; //4, nothing connected to 4
 
-const int rainPin = A1;
+const int rainPin = PORTC1; //A1;
 
-const int windowPosPin = 10;
-const int windowBlindsPin = 9;
+const int windowPosPin = PORTB2; //10;
+const int windowBlindsPin = PORTB1; //9;
 
-const int lightPin = A3;
+const int lightPin = PORTC3; //A3;
 
-const int lockPin = 12;
+const int lockPin = PORTB4; //12;
 
 
 // END PIN DECLARATIONS
