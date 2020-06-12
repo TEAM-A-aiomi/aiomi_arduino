@@ -3,7 +3,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-//#include <Servo.h>
+#include <Servo.h>
 
 //TODO change pins to port numbers
 
@@ -29,12 +29,18 @@ const int nightSwitchPin = PORTD4; //4, nothing connected to 4
 
 const int rainPin = PORTC1; //A1;
 
-const int windowPosPin = PORTB2; //10;
-const int windowBlindsPin = PORTB1; //9;
+const int windowPosPinBare = PORTB2; //10;
+const int windowBlindsPinBare = PORTB1; //9;
+
+const int windowPosPin = 10;
+const int windowBlindsPin = 9;
+
 
 const int lightPin = PORTC3; //A3;
 
 const int lockPin = PORTB4; //12;
+
+const int tempDiffLedPin = PORTD5; //5;
 
 
 // END PIN DECLARATIONS
@@ -54,8 +60,8 @@ const int BLINDS_OPEN = 180;
 const int ANALOG_MIN = 0;
 const int ANALOG_MAX = 255;
 
-// Servo windowPosServo;
-// Servo windowBlindsServo;
+Servo windowPosServo;
+Servo windowBlindsServo;
 
 int lastSetWindowAngle;
 int lastSetBlindsAngle;
@@ -83,6 +89,7 @@ int main(void)
   // PORTD &= ~_BV(DDD7);
 
   analogReadSetup();
+  setUpAnalogWrite();
 
   // TOOD finish setup, see setup function below
   bool nightMode = false;
@@ -99,6 +106,8 @@ int main(void)
   DDRD &= ~_BV(DDD4);
   PORTD &= ~_BV(DDD4);
 
+  windowPosServo.attach(windowPosPin);
+  windowBlindsServo.attach(windowBlindsPin);
 
   attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
 
@@ -120,7 +129,7 @@ int main(void)
     // _delay_ms(MS_DELAY);
 
     nightMode = readDigital(D, PORTD4);
-    insideReading = readAnalog(tempInPin);
+    //insideReading = readAnalog(tempInPin); //commenting out to force temp diff because analogRead breaks after the first run 
     outsideReading = readAnalog(tempOutPin);
     lightReading = readAnalog(lightPin);
 
@@ -402,14 +411,48 @@ void setDigital(int port, int pin, bool value)
   _delay_ms(500);
 }
 
-void setAnalog(int pin, int value)
+void setUpAnalogWrite(){
+  //DDRB |= _BV(DDB2);
+  
+  // Fast PWM, clear OC1B on compare match, set at BOTTOM (non-inverting)
+  //TCCR1B |= _BV(COM1B1); //COM1B1 = 1
+  //TCCR1B &= ~_BV(COM1B0); //COM1B0 = 0
+  
+  //TCCR1B |= 1 << COM0B0;
+  
+  //TCCR1B |= (1 << WGM00);
+ // TCCR1B |= (1 << WGM01);
+  
+ // TCCR1A |= 1 << CS00;
+  
+ 
+  DDRD |= 1 << PORTD5;
+  
+  TCCR0A |= 1 << COM0B0;
+  TCCR0A |= 1 << WGM00;
+  TCCR0A |= 1 << WGM01;
+  
+  TCCR0B |= 1 << CS00;
+  
+  
+  // Parts inspired by/copied from  Servo.cpp Arduino library
+  
+//    TCCR1A = 0;             // normal counting mode
+//    TCCR1B = _BV(CS11);     // set prescaler of 8
+//    TCNT1 = 0;              // clear the timer count
+  
+  //TIFR1 |= _BV(OCF1A);     // clear any pending interrupts;
+  //  TIMSK1 |=  _BV(OCIE1A) ; // enable the output compare interrupt
+  
+  
+  
+}
+
+void setAnalog(int value)
 {
-  //TODO implement in bare metal c
-  if (value >= ANALOG_MIN && value <= ANALOG_MAX)
-  {
-    analogWrite(pin, value);
-    _delay_ms(50);
-  }
+  //Hardcode for digital pin 5 because of timer set up
+  OCR0B = value;
+    _delay_ms(30);
 }
 
 void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode)
@@ -418,6 +461,7 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
   if (isRaining)
   {
     setWindowAngle(WINDOW_CLOSED);
+    setAnalog(0);
   }
   else if (nightMode && lightReading < NIGHT_LIGHT_LEVEL)
   {
@@ -426,12 +470,14 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
     if (WINDOW_NIGHT == WINDOW_CLOSED)
     {
       lockWindow();
+      setAnalog(255);
     }
   }
   else if (lightReading > BRIGHT_LIGHT_LEVEL)
   {
     int angle = 165; //TODO figure out math
     setBlindsAngle(angle);
+    setAnalog(0);
   }
   else if (insideReading > (outsideReading - tolerance))
   {
@@ -446,6 +492,8 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
     // open the window
     setWindowAngle(angle);
 
+    setAnalog(angle);
+
     //close the blinds
     //TODO adjust to make sure that it works even in blinds open and angle are different scales
     //setBlindsAngle(BLINDS_OPEN - angle);
@@ -458,6 +506,8 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
 
     setWindowAngle(angle);
 
+    setAnalog(angle);
+
     //close the blinds all the way
     //setBlindsAngle(BLINDS_CLOSED);
   }
@@ -466,16 +516,17 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
 void setWindowAngle(int angle)
 {
 
-  if (angle == lastSetWindowAngle)
+  /**if (angle == lastSetWindowAngle)
   {
     indicateSuccess;
   }
-  else if (angle >= WINDOW_CLOSED && angle <= WINDOW_OPEN)
+  else*/
+  if (angle >= WINDOW_CLOSED && angle <= WINDOW_OPEN)
   {
     unlockWindow();
     indicateError();
-    //windowPosServo.write(angle);
-    setAnalog(windowPosPin, angle);
+    windowPosServo.write(angle);
+    //setAnalog(windowPosPin, angle); //Discovered we can't analogWrite to a Servo, so decided to use Servo library
     _delay_ms(50);
     lastSetWindowAngle = angle;
 
@@ -495,14 +546,10 @@ void setWindowAngle(int angle)
 
 void setBlindsAngle(int angle)
 {
-
   if (angle >= BLINDS_CLOSED && angle <= BLINDS_OPEN && angle != lastSetBlindsAngle)
   {
-    //unlockWindow();
-    //indicateError();
-    //windowBlindsServo.write(angle);
+    windowBlindsServo.write(angle);
 
-    setAnalog(windowBlindsPin, angle);
     _delay_ms(50);
     lastSetBlindsAngle = angle;
 
@@ -510,13 +557,10 @@ void setBlindsAngle(int angle)
     {
       _delay_ms(10);
     }
-
-    //indicateSuccess();
   }
   else
   {
     Serial.println("Invalid Blinds Position");
-    //indicateError();
   }
 }
 
@@ -524,29 +568,29 @@ void setBlindsAngle(int angle)
 void indicateError()
 {
   //TODO Oliver Update when pins change
-  set_digital(greenLedPin, LOW);
+  setDigital(D, greenLedPin, false);
   _delay_ms(50);
-  set_digital(redLedPin, HIGH);
+  setDigital(B, redLedPin, true);
   _delay_ms(50);
 }
 
 void indicateSuccess()
 {
   //TODO Oliver Update when pins change
-  set_digital(redLedPin, LOW);
+  setDigital(B, redLedPin, false);
   _delay_ms(50);
-  set_digital(greenLedPin, HIGH);
+  setDigital(D, greenLedPin, true);
   _delay_ms(50);
 }
 
 void lockWindow()
 {
-  set_digital(lockPin, HIGH);
+  setDigital(B, lockPin, true);
   _delay_ms(50);
 }
 
 void unlockWindow()
 {
-  set_digital(lockPin, LOW);
+  setDigital(B, lockPin, false);
   _delay_ms(50);
 }
