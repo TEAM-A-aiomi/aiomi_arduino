@@ -503,7 +503,7 @@ void setUpWindowServo(){
   
  // TCCR1A |= 1 << CS00;
   
-  /**
+ 
   DDRD |= 1 << PD5;
   
   TCCR0A |= 1 << COM0B0;
@@ -511,13 +511,13 @@ void setUpWindowServo(){
   TCCR0A |= 1 << WGM01;
   
   TCCR0B |= 1 << CS00;
-  */
+  
   
   // Parts inspired by/copied from  Servo.cpp Arduino library
   
-    TCCR1A = 0;             // normal counting mode
-    TCCR1B = _BV(CS11);     // set prescaler of 8
-    TCNT1 = 0;              // clear the timer count
+//    TCCR1A = 0;             // normal counting mode
+//    TCCR1B = _BV(CS11);     // set prescaler of 8
+//    TCNT1 = 0;              // clear the timer count
   
   //TIFR1 |= _BV(OCF1A);     // clear any pending interrupts;
   //  TIMSK1 |=  _BV(OCIE1A) ; // enable the output compare interrupt
@@ -553,7 +553,7 @@ void setWindowAngle(int angle)
     // Arduino Uno has clock frequency of 16MHz, so 16 cycles per microsecond
     
     
-    
+    /**
     int ticks = angle * 16;
     
     if (ticks == 0){
@@ -567,11 +567,11 @@ void setWindowAngle(int angle)
     
     OCR0B = TCNT1 + ticks;
     SREG = oldSREG;
-    
+    */
     
     
     //OCR1B = angle;
-    //OCR0B = angle;
+    OCR0B = angle;
     _delay_ms(30);
     
     lastSetWindowAngle = angle;
