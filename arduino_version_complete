@@ -180,6 +180,10 @@ bool readDigital(int pin){
     
 void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode){
   
+  if(lightReading > BRIGHT_LIGHT_LEVEL){
+    int angle = 165; //TODO figure out math
+    setBlindsAngle(angle);
+  } 
 
     //isRaining is determined by interrupt, close the window all the way if it is raining
   if(isRaining){
@@ -192,10 +196,6 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
      lockWindow(); 
     }
   }
-  else if(lightReading > BRIGHT_LIGHT_LEVEL){
-    int angle = 165; //TODO figure out math
-    setBlindsAngle(angle);
-  } 
   else if (insideReading > (outsideReading - tolerance)){
     //open window
     //(358-120)/180 = 1.82
