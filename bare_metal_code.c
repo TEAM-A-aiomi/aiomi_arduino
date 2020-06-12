@@ -408,7 +408,7 @@ void setAnalog(int pin, int value)
   if (value >= ANALOG_MIN && value <= ANALOG_MAX)
   {
     analogWrite(pin, value);
-    delay(50);
+    _delay_ms(50);
   }
 }
 
@@ -476,12 +476,12 @@ void setWindowAngle(int angle)
     indicateError();
     //windowPosServo.write(angle);
     setAnalog(windowPosPin, angle);
-    delay(50);
+    _delay_ms(50);
     lastSetWindowAngle = angle;
 
     while (lastSetWindowAngle != angle)
     {
-      delay(10);
+      _delay_ms(10);
     }
 
     indicateSuccess();
@@ -503,12 +503,12 @@ void setBlindsAngle(int angle)
     //windowBlindsServo.write(angle);
 
     setAnalog(windowBlindsPin, angle);
-    delay(50);
+    _delay_ms(50);
     lastSetBlindsAngle = angle;
 
     while (lastSetBlindsAngle != angle)
     {
-      delay(10);
+      _delay_ms(10);
     }
 
     //indicateSuccess();
@@ -524,29 +524,29 @@ void setBlindsAngle(int angle)
 void indicateError()
 {
   //TODO Oliver Update when pins change
-  digitalWrite(greenLedPin, LOW);
-  delay(50);
-  digitalWrite(redLedPin, HIGH);
-  delay(50);
+  set_digital(greenLedPin, LOW);
+  _delay_ms(50);
+  set_digital(redLedPin, HIGH);
+  _delay_ms(50);
 }
 
 void indicateSuccess()
 {
   //TODO Oliver Update when pins change
-  digitalWrite(redLedPin, LOW);
-  delay(50);
-  digitalWrite(greenLedPin, HIGH);
-  delay(50);
+  set_digital(redLedPin, LOW);
+  _delay_ms(50);
+  set_digital(greenLedPin, HIGH);
+  _delay_ms(50);
 }
 
 void lockWindow()
 {
-  digitalWrite(lockPin, HIGH);
-  delay(50);
+  set_digital(lockPin, HIGH);
+  _delay_ms(50);
 }
 
 void unlockWindow()
 {
-  digitalWrite(lockPin, LOW);
-  delay(50);
+  set_digital(lockPin, LOW);
+  _delay_ms(50);
 }
