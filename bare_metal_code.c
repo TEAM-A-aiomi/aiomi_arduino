@@ -507,9 +507,6 @@ void setWindowPosition(int insideReading, int outsideReading, int lightReading, 
     setWindowAngle(angle);
 
     setAnalog(angle);
-
-    //close the blinds all the way
-    //setBlindsAngle(BLINDS_CLOSED);
   }
 }
 
