@@ -141,7 +141,7 @@ int main(void)
   // windowPosServo.attach(windowPosPin);
   // windowBlindsServo.attach(windowBlindsPin);
 
-  attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
   // Serial.begin(9600);
 
   while (1)
