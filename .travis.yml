@@ -26,8 +26,7 @@ script:
 
   - echo "Reached Script Section"
   
-  #- avr-gcc -Os -DF_CPU=16000000UL -mmcu=atmega328p -c -o bare_metal_code.o bare_metal_code.c
-   - avr-gcc -Os -DF_CPU=16000000UL -mmcu=atmega328p -c -o bare_metal_code.o bare_metal_code_wrapper_test.c
+  - avr-gcc -Os -DF_CPU=16000000UL -mmcu=atmega328p -c -o bare_metal_code.o bare_metal_code_wrapper_test.c
   
   - avr-gcc -mmcu=atmega328p bare_metal_code.o -o output
 
