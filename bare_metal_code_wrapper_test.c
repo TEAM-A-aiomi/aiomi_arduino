@@ -2,6 +2,8 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdbool.h>
+
 
 //#include <Servo.h>
 
@@ -74,6 +76,24 @@ volatile bool isRaining = false;
 #define C 1
 #define D 2
 
+
+//Defining functions here so it can build in Travis
+void changeRainingStatus();
+void analogReadSetup();
+uint16_t readAnalog(int pin);
+bool readDigital(int port, int pin);
+void setDigital(int port, int pin, bool value);
+void setUpAnalogWrite();
+void setAnalog(int value);
+void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode);
+void setWindowAngle(int angle);
+void setBlindsAngle(int angle);
+void indicateError();
+void indicateSuccess();
+void lockWindow();
+void unlockWindow();
+
+
 int main(void)
 {
   //DIGITAL OUTPUT SETUP
@@ -122,7 +142,7 @@ int main(void)
   // windowBlindsServo.attach(windowBlindsPin);
 
   attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
-  Serial.begin(9600);
+  // Serial.begin(9600);
 
   while (1)
   {
@@ -556,7 +576,7 @@ void setWindowAngle(int angle)
   }
   else
   {
-    Serial.println("Invalid Window Position");
+    // Serial.println("Invalid Window Position");
     indicateError();
   }
 }
@@ -577,11 +597,10 @@ void setBlindsAngle(int angle)
   }
   else
   {
-    Serial.println("Invalid Blinds Position");
+    // Serial.println("Invalid Blinds Position");
   }
 }
 
-//TODO Oliver functions after this comment - change to use bare metal wrapper and bare metal delay
 void indicateError()
 {
   //TODO Oliver Update when pins change
