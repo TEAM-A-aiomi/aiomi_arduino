@@ -39,7 +39,7 @@ const int BRIGHT_LIGHT_LEVEL = 600;
 const int BLINDS_CLOSED = 0;
 const int BLINDS_OPEN = 180;
 
-Servo windowPosServo;
+//Servo windowPosServo;
 Servo windowBlindsServo;
 
 int lastSetWindowAngle;
@@ -61,7 +61,9 @@ void setup()
   //pinMode(windowPosPin, OUTPUT);
   //pinMode(windowBlindsPin, OUTPUT);
   
-  windowPosServo.attach(windowPosPin);
+  pinMode(windowPosPin, OUTPUT);
+  
+  //windowPosServo.attach(windowPosPin);
   windowBlindsServo.attach(windowBlindsPin);
   
   pinMode(lightPin, INPUT);
@@ -130,12 +132,12 @@ void testAllComponents(){
   
   int angle = 0;
   for(angle = 0; angle <= 180; angle+=1){
-    windowPosServo.write(angle);
+    //windowPosServo.write(angle);
     delay(15);
     //Serial.println("set servo to " + String(angle));
   } 
     for(angle = 180; angle >= 0; angle-=1){
-    windowPosServo.write(angle);
+    //windowPosServo.write(angle);
     delay(15);
     //Serial.println("set servo to " + String(angle));
   } 
@@ -179,6 +181,7 @@ bool readDigital(int pin){
 }
     
 void setWindowPosition(int insideReading, int outsideReading, int lightReading, bool nightMode){
+  
   
   if(lightReading > BRIGHT_LIGHT_LEVEL){
     int angle = 165; //TODO figure out math
@@ -235,7 +238,8 @@ void setWindowAngle(int angle){
   {
     unlockWindow();
     indicateError();
-    windowPosServo.write(angle);
+    //windowPosServo.write(angle);
+    analogWrite(windowPosPin, angle);
     delay(50);
     lastSetWindowAngle = angle;
     
@@ -300,4 +304,3 @@ void unlockWindow(){
   digitalWrite(lockPin,LOW);
   delay(50);
 }
-
