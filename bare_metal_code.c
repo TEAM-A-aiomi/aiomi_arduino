@@ -106,21 +106,21 @@ int main(void)
   DDRD &= ~_BV(DDD4);
   PORTD &= ~_BV(DDD4);
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
   //configure green led (on port D, PD7) as digital output pin
-  //DDRD |= _BV(DDD7);
+  DDRD |= _BV(DDD7);
   //configure red led (on port B, PB0) as digital output pin
-  //DDRB |= _BV(DDB0);
+  DDRB |= _BV(DDB0);
   //configure window servo (on port B, PB1) as digital output pin
-  //DDRB |= _BV(DDB1);
+  DDRB |= _BV(DDB1);
   //configure blinds servo (on port B, PB2) as digital output pin
-  //DDRB |= _BV(DDB2);
+  DDRB |= _BV(DDB2);
   //configure window lock light (on port B, PB4) as digital output pin
-  //DDRB |= _BV(DDB4);
-=======
+  DDRB |= _BV(DDB4);
+//=======
   windowPosServo.attach(windowPosPin);
   windowBlindsServo.attach(windowBlindsPin);
->>>>>>> branch 'master' of https://github.com/TEAM-A-aiomi/aiomi_arduino
+//>>>>>>> branch 'master' of https://github.com/TEAM-A-aiomi/aiomi_arduino
 
   attachInterrupt(digitalPinToInterrupt(rainSwitchPin), changeRainingStatus, CHANGE);
 
